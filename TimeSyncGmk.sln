@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35919.96
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSync", "TimeSync\TimeSync.csproj", "{A2732BA4-372E-464C-B4E8-9894005C3A75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PicGen", "PicGen\PicGen.csproj", "{E132644A-5079-40FC-894F-3586535393BC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A2732BA4-372E-464C-B4E8-9894005C3A75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2732BA4-372E-464C-B4E8-9894005C3A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2732BA4-372E-464C-B4E8-9894005C3A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2732BA4-372E-464C-B4E8-9894005C3A75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E132644A-5079-40FC-894F-3586535393BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E132644A-5079-40FC-894F-3586535393BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E132644A-5079-40FC-894F-3586535393BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E132644A-5079-40FC-894F-3586535393BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A393E522-D764-416D-A939-B8899E7C36B3}
+	EndGlobalSection
+EndGlobal
