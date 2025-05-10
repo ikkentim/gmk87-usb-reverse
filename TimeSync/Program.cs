@@ -1,22 +1,20 @@
-﻿using System;
-using HidSharp;
+﻿using HidSharp;
 using HidSharp.Reports;
 
-class Program
+namespace TimeSync;
+
+public class Program
 {
-    static void PicGen()
+    private static async Task Main(string[] args)
     {
-
+        await ConnectAndSend();
     }
-    static void Main(string[] args)
+    
+    private static async Task ConnectAndSend()
     {
-        // Initialize the HID device list
-        DeviceList deviceList = DeviceList.Local;
+        var empty = new byte[60];
 
-        // Find all HID devices
-        var hidDevices = deviceList.GetHidDevices();
-
-        // Search for a device with PID 5055
+        var hidDevices = DeviceList.Local.GetHidDevices();
         foreach (var device in hidDevices)
         {
             // Vendor ID                : 0x320F
@@ -36,61 +34,85 @@ class Program
                 
 
                 // Open the device
-                using (var stream = device.Open())
-                {
-                    // blueprint
-                    byte[] command =
-                    [
-                        0x04, 0x2c, 0x03, 0x06, 0x30, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x01, 0x00, 0x00, 0x18, 0xff,
-                        0x00, 0x0d, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00,
-                        0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x02, 0x00, 0x01, 0x00, 0x01, 0x04, 0x16, 0x00, 0x04, 0x08,
-                        0x05, 0x25, 0x00, 0x64, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-                    ];
+                await using var stream = device.Open();
 
-                    var date = DateTime.Now;
-                    command[0x2b] = ToHexNum(date.Second);
-                    command[0x2c] = ToHexNum(date.Minute);
-                    command[0x2d] = ToHexNum(date.Hour);
-                    command[0x2e] = (byte)date.DayOfWeek;
-                    command[0x2f] = ToHexNum(date.Day);
-                    command[0x30] = ToHexNum(date.Month);
-                    command[0x31] = ToHexNum(date.Year % 100);
-                    command[0x29] = 0x0;// show image 0(time)/1/2
+                // Console.WriteLine("start freeze?");
+                // Send(stream, 0x23, empty); // freeze?
+                //
+                // await Task.Delay(1000);
+                //
+                // Console.WriteLine("save?");
+                // Send(stream, 0x02, empty); // save?
 
-                    const ushort frameDuration = 1000;//in ms
-                    var frameDurationMsb = (byte)(frameDuration >> 8);
-                    var frameDurationLsb = (byte)(frameDuration & 0xFF);
-                    command[0x33] = frameDurationLsb;
-                    command[0x34] = frameDurationMsb;
-                    command[0x2a] = 2;// frame count  in image 1
-                    command[0x36] = 3; // frame count in image 2
+                SendConfigFrame(stream);
 
-                    command[0x02] = 0x03; // I've seen 0x03 and 0x04; meaning unclear
-                    command[0x11] = 0x0d; // I've only ever seen 0x0d; meaning unclear
-                    command[0x1c] = 0xff; // I've only ever seen 0xff; meaning unclear
-
-                    command[0x25] = 0x09; // I've only ever seen 0x09; meaning unclear
-                    command[0x26] = 0x02; // I've only ever seen 0x02; meaning unclear
-                    command[0x28] = 0x01; // I've only ever seen 0x01; meaning unclear
-
-                    command[0x01] = Checksum(command.AsSpan(2));
-
-                    command[0x03] = 0x02; // I've only ever seen 0x06; meaning unclear
-
-                    // command theory:
-                    // 0x06: "config" frame
-                    // 0x02: "end of stream" frame?
-                    // 0x21: image upload
-
-                    // overwrite stuff
-                    stream.Write(command, 0, command.Length);
-                    Console.WriteLine("Command sent to device.");
-                }
                 return;
             }
         }
 
         Console.WriteLine("No device with PID 5055 found.");
+    }
+
+    private static void Send(HidStream stream, byte command, ReadOnlySpan<byte> data)
+    {
+        if (data.Length != 60)
+        {
+            throw new ArgumentException("invalid data len", nameof(data));
+        }
+
+        Span<byte> buf = stackalloc byte[64];
+
+        buf[0] = 0x04; // report ID
+        buf[3] = command; // command ID
+        data.CopyTo(buf[4..]);
+        
+        var chk = Checksum(buf[3..]);
+        buf[1] = (byte)(chk & 0xff); // checksum LSB
+        buf[2] = (byte)((chk >> 8) & 0xff); // checksum MSB
+
+        stream.Write(buf);
+        stream.Flush();
+    }
+    private static void SendConfigFrame(HidStream stream)
+    {
+        var date = DateTime.Now;
+        
+        const ushort frameDuration = 1000;//in ms
+        var frameDurationMsb = (byte)(frameDuration >> 8);
+        var frameDurationLsb = (byte)(frameDuration & 0xFF);
+
+        // config command
+        var command = new byte[64];
+
+        command[0x04] = 0x30; // ???
+        command[0x09] = 0x08; // ???
+        command[0x0a] = 0x08; // ???
+        command[0x0b] = 0x01; // ???
+        command[0x0e] = 0x18; // ???
+        command[0x0f] = 0xff; // ???
+
+        command[0x11] = 0x0d; // ???
+        command[0x1c] = 0xff; // ???
+
+        command[0x25] = 0x09; // ???
+        command[0x26] = 0x02; // ???
+        command[0x28] = 0x01; // ???
+        command[0x29] = 0;// show image 0(time)/1/2
+        command[0x2a] = 2;// frame count  in image 1
+        command[0x2b] = ToHexNum(date.Second);
+        command[0x2c] = ToHexNum(date.Minute);
+        command[0x2d] = ToHexNum(date.Hour);
+        command[0x2e] = (byte)date.DayOfWeek;
+        command[0x2f] = ToHexNum(date.Day);
+
+        command[0x30] = ToHexNum(date.Month);
+        command[0x31] = ToHexNum(date.Year % 100);
+        command[0x33] = frameDurationLsb;
+        command[0x34] = frameDurationMsb;
+        command[0x36] = 3; // frame count in image 2
+
+
+        Send(stream, 0x06, command.AsSpan(4));
     }
 
     /// <summary>
@@ -109,11 +131,11 @@ class Program
     }
 
     /// <summary>
-    /// GMK checksum. At least for the "config" frame we're working with.
+    /// GMK checksum.
     /// </summary>
-    private static byte Checksum(ReadOnlySpan<byte> buf)
+    private static ushort Checksum(ReadOnlySpan<byte> buf)
     {
-        byte chk = 0xfd;
+        ushort chk = 0;
 
         foreach (var v in buf)
         {

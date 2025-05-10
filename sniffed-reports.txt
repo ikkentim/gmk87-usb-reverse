@@ -1,3 +1,58 @@
+general preamble:
+0000 = report ID (4)
+0001 = checksum LSB: sum(buf[3..])
+0002 = checksum MSB
+0003 = command ID
+
+command theory:
+0x01: communication start?
+0x06: "config" frame
+0x02: save?
+0x21: image upload frame
+0x23: zero out the image buffer in storage + save + freeze control of tft?
+
+----------------------------------------------------------------------------------
+
+"config" frame (0x06):
+
+xx = known meaning
+qq = constant (afaik; haven't seen it change yet)
+
+       x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 xa xb xc xd xe xf
+000x   xx xx xx xx qq qq qq qq qq ?? qq qq qq qq qq qq
+001x   qq qq qq qq qq qq qq qq qq qq qq qq qq qq qq qq << still unchanged!
+002x   qq qq qq qq qq qq qq qq qq xx xx xx xx xx xx xx
+003x   xx xx qq xx xx qq xx qq qq qq qq qq qq qq qq qq
+
+0029 = display index; 0 = time, 1 = img1, 2 = img2, 3 = corrupt image + clock
+002a = frame count in img1
+002b = seconds but decimal value as hex (0x20 = 20 seconds)
+002c = minutes but decimal value as hex  (0x20 = 20 minutes)
+002d = hours but decimal value as hex (0x20 = 20 hours)
+002e = day of week
+002f = day of month
+0030 = month
+0031 = year
+0033 = frame interval time lsb
+0034 = frame interval time msb
+0036 = frame count in img2
+
+----------------------------------------------------------------------------------
+
+"image" frame (0x21):
+
+0004 = number of pixels in frame
+0005 = LSB of offset in buffer
+0006 = middle byte of offset in buffer
+0007 = MSB of offset in buffer
+0008+= pixel data; 2 bytes per pixel in RGB555; most significant bit is unused?
+
+----------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------
+
 Arrival Time: May  8, 2025 00:09:05.509724000 W. Europe Daylight Time (thursday)
 
 0000   04 21 03 06 30 00 00 00 00 08 08 01 00 00 18 ff   .!..0...........
@@ -80,35 +135,6 @@ Arrival Time: May  9, 2025 17:15:25.686769000 W. Europe Daylight Time
 0020   00 00 00 00 00 09 02 00 f1 02 02 25 15 17 05 09   ...........%....
 0030   05 25 00 e8 03 00 03 00 00 00 00 00 00 00 00 00   .%..............
 
-----------------------------------------------------------------------------------
-
-xx = known meaning
-qq = constant (afaik; haven't seen it change yet)
-
-       x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 xa xb xc xd xe xf
-000x   xx xx ?? qq qq qq qq qq qq ?? qq qq qq qq qq qq
-001x   qq qq qq qq qq qq qq qq qq qq qq qq qq qq qq qq << still unchanged!
-002x   qq qq qq qq qq qq qq qq qq xx xx xx xx xx xx xx
-003x   xx xx qq xx xx qq xx qq qq qq qq qq qq qq qq qq
-
-0000 = report ID (4)
-0001 = checksum: 0xfd + sum(buf[2..])
-0003 = command???
-0029 = display index; 0 = time, 1 = img1, 2 = img2, 3 = corrupt image + clock
-002a = frame count in img1
-002b = seconds but decimal value as hex (0x20 = 20 seconds)
-002c = minutes but decimal value as hex  (0x20 = 20 minutes)
-002d = hours but decimal value as hex (0x20 = 20 hours)
-002e = day of week
-002f = day of month
-0030 = month
-0031 = year
-0033 = frame interval time lsb
-0034 = frame interval time msb
-0036 = frame count in img2
-
-
-
 ----
 
 Arrival Time: May  8, 2025 22:32:28.382933000 W. Europe Daylight Time
@@ -117,7 +143,6 @@ Arrival Time: May  8, 2025 22:32:28.382933000 W. Europe Daylight Time
 0010   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
 0020   ff ff ff ff ff ff ff ff ff df ff ff f7 df ff ff   ................
 0030   ff ff ff bf ff df ff ff ff ff ff ff ff bf ff df   ................
-
 
 ----
 
@@ -129,34 +154,63 @@ Arrival Time: May  8, 2025 22:34:14.314555000 W. Europe Daylight Time
 0020   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
 0030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
 
+----
+
+first few frames when uploading frames w/ encoded-rgb555.bmp:
+
+0000   04 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0020   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+0000   04 0e 05 06 30 00 00 00 00 08 08 01 00 00 18 ff   ....0...........
+0010   00 0d 00 00 00 00 00 00 00 00 00 00 ff 00 00 00   ................
+0020   00 00 00 00 00 09 02 00 f1 01 01 14 52 14 06 10   ............R...
+0030   05 25 00 e8 03 00 01 00 00 00 00 00 00 00 00 00   .%..............
+
+0000   04 02 00 02 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0020   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+0000   04 23 00 23 00 00 00 00 00 00 00 00 00 00 00 00   .#.#............
+0010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0020   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+0000   04 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0020   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0030   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+
+0000   04 d3 01 21 38 00 00 00 00 00 00 01 00 02 00 03   ...!8...........
+0010   00 04 00 05 00 06 00 07 00 08 00 09 00 0a 00 0b   ................
+0020   00 0c 00 0d 00 0e 00 0f 00 10 00 11 00 12 00 13   ................
+0030   00 14 00 15 00 16 00 17 00 18 00 19 00 1a 00 1b   ................
+
+0000   04 1b 08 21 38 38 00 00 00 1c 00 1d 00 1e 00 1f   ...!88..........
+0010   00 40 00 41 00 42 00 43 00 44 00 45 00 46 00 47   .@.A.B.C.D.E.F.G
+0020   00 48 00 49 00 4a 00 4b 00 4c 00 4d 00 4e 00 4f   .H.I.J.K.L.M.N.O
+0030   00 50 00 51 00 52 00 53 00 54 00 55 00 56 00 57   .P.Q.R.S.T.U.V.W
+
+0000   04 63 0e 21 38 70 00 00 00 58 00 59 00 5a 00 5b   .c.!8p...X.Y.Z.[
+0010   00 5c 00 5d 00 5e 00 5f 00 80 00 81 00 82 00 83   .\.].^._........
+0020   00 84 00 85 00 86 00 87 00 88 00 89 00 8a 00 8b   ................
+0030   00 8c 00 8d 00 8e 00 8f 00 90 00 91 00 92 00 93   ................
+
+0000   04 ab 14 21 38 a8 00 00 00 94 00 95 00 96 00 97   ...!8...........
+0010   00 98 00 99 00 9a 00 9b 00 9c 00 9d 00 9e 00 9f   ................
+0020   00 c0 00 c1 00 c2 00 c3 00 c4 00 c5 00 c6 00 c7   ................
+0030   00 c8 00 c9 00 ca 00 cb 00 cc 00 cd 00 ce 00 cf   ................
+
+0000   04 ff 0e 21 38 e0 00 00 00 d0 00 d1 00 d2 00 d3   ...!8...........
+0010   00 d4 00 d5 00 d6 00 d7 00 d8 00 d9 00 da 00 db   ................
+0020   00 dc 00 dd 00 de 00 df 01 00 01 01 01 02 01 03   ................
+0030   01 04 01 05 01 06 01 07 01 08 01 09 01 0a 01 0b   ................
 
 ----
 
-image dumps:
-
-0000   04 f2 2f 21 38 88 a1 02 ff ff ff ff ff ff ff ff   ../!8...........
-0010   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
-0020   ff ff ff ff ff ff ff ff ff ff ff ff ff ff 50 1f   ..............P.
-0030   50 1f 50 1f 50 1f 50 1f 50 1f ff ff ff ff ff ff   P.P.P.P.P.......
-
-0000   04 05 1f 21 38 c0 a1 02 ff ff ff ff ff ff ff ff   ...!8...........
-0010   ff ff ff ff ff ff ff ff ff ff ff ff ff ff 50 1f   ..............P.
-0020   50 1f 50 1f 50 1f 50 1f 50 1f 50 1f 50 1f 50 1f   P.P.P.P.P.P.P.P.
-0030   50 1f 50 1f 50 1f 50 1f 50 1f 50 1f 50 1f 50 1f   P.P.P.P.P.P.P.P.
-
-
-0000   04 b5 2b 21 38 f8 a1 02 50 1f 50 1f 50 1f 50 1f   ..+!8...P.P.P.P.
-0010   50 1f 50 1f 50 1f 50 1f 50 1f ff ff ff ff ff ff   P.P.P.P.P.......
-0020   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
-0030   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
-
-0000   04 ca 34 21 38 b8 9c 02 ff ff ff ff ff ff ff ff   ..4!8...........
-0010   ff ff ff ff ff ff ff ff ff ff 50 1f 50 1f 50 1f   ..........P.P.P.
-0020   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
-0030   ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff   ................
-
-encoded image dumps rgb555:
-
+random later frames w/ encoded-rgb555.bmp:
 
 0000   04 59 1d 21 38 88 a2 00 ad 44 ad 45 ad 46 ad 47   .Y.!8....D.E.F.G
 0010   ad 48 ad 49 ad 4a ad 4b ad 4c ad 4d ad 4e ad 4f   .H.I.J.K.L.M.N.O
