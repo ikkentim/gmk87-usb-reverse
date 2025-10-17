@@ -40,16 +40,39 @@ qq = constant (afaik; haven't seen it change yet)
 ----------------------------------------------------------------------------------
 
 "image" frame (0x21):
-
-0004 = number of pixels in frame
+0004 = num of bytes in frame (always 38 even for last pixels in frame)
 0005 = LSB of offset in buffer
-0006 = middle byte of offset in buffer
-0007 = MSB of offset in buffer
+0006 = MSB of offset in buffer
+0007 = 00/01 frame number indicator?
 0008+= pixel data; 2 bytes per pixel in RGB555; most significant bit is unused?
 
 ----------------------------------------------------------------------------------
 
 ----------------------------------------------------------------------------------
+
+all red picture ff0000
+
+0000   04 79 1b 21 38 00 00 00 f8 00 f8 00 f8 00 f8 00
+0010   f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00
+0020   f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00
+0030   f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00 f8 00
+
+all green picture 00ff00
+
+0000   04 84 1a 21 38 38 af 00 07 e0 07 e0 07 e0 07 e0
+0010   07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0
+0020   07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0
+0030   07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0 07 e0
+
+
+----------------------------------------------------------------------------------
+
+Arrival Time: Oct 17, 2025 14:24:02.738778000 W. Europe Daylight Time (friday)
+
+0000   04 ef 03 06 30 00 00 00 00 08 08 01 00 00 18 ff
+0010   00 0d 00 00 00 00 00 00 00 00 00 00 ff 00 00 00
+0020   00 00 00 00 00 09 02 00 01 01 01 02 24 14 05 17
+0030   10 25 00 e8 03 00 01 00 00 00 00 00 00 00 00 00
 
 ----------------------------------------------------------------------------------
 
