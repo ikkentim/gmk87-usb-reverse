@@ -39,23 +39,16 @@ public static class Program
                 // Open the device
                 await using var stream = device.Open();
 
-                // Console.WriteLine("start freeze?");
-                // Send(stream, 0x23); // freeze?
-                //
-                // await Task.Delay(1000);
-                //
-                // Console.WriteLine("save?");
-                // Send(stream, 0x02); // save?
-                
                 Send(stream, 0x01);
                 SendConfigFrame(stream, 1, 1, 1);
                 Send(stream, 0x02);
-                Send(stream, 0x23);
+                Send(stream, 0x23); // TODO: is this a reset command?
                 Send(stream, 0x01);
 
                 // TODO: there is a weird issue that's sometimes resolved by a delay, but also sometimes not, where the first few pixels in the first row stay white.
-                // Thread.Sleep(500);
+                Thread.Sleep(500);
 
+                // TODO: change to non-hardcoded paths
                 SendPicture(stream, @"D:\projects\gmk87-usb-reverse\nyan.bmp", 0);
                 SendPicture(stream, @"D:\projects\gmk87-usb-reverse\encoded-rgb555.bmp", 1);
                 
