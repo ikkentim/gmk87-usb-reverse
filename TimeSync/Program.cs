@@ -39,20 +39,20 @@ public static class Program
                 // Open the device
                 await using var stream = device.Open();
 
-                Send(stream, 0x01);
+                // Send(stream, 0x01);
                 SendConfigFrame(stream, 1, 1, 1);
-                Send(stream, 0x02);
-                Send(stream, 0x23); // TODO: is this a reset command?
-                Send(stream, 0x01);
+                // Send(stream, 0x02);
+                // Send(stream, 0x23); // TODO: is this a reset command?
+                // Send(stream, 0x01);
 
-                // TODO: there is a weird issue that's sometimes resolved by a delay, but also sometimes not, where the first few pixels in the first row stay white.
-                Thread.Sleep(500);
-
-                // TODO: change to non-hardcoded paths
-                SendPicture(stream, @"D:\projects\gmk87-usb-reverse\nyan.bmp", 0);
-                SendPicture(stream, @"D:\projects\gmk87-usb-reverse\encoded-rgb555.bmp", 1);
+                // // TODO: there is a weird issue that's sometimes resolved by a delay, but also sometimes not, where the first few pixels in the first row stay white.
+                // Thread.Sleep(500);
+                //
+                // // TODO: change to non-hardcoded paths
+                // SendPicture(stream, @"D:\projects\gmk87-usb-reverse\nyan.bmp", 0);
+                // SendPicture(stream, @"D:\projects\gmk87-usb-reverse\encoded-rgb555.bmp", 1);
                 
-                Send(stream, 0x02);
+                // Send(stream, 0x02);
 
                 return;
             }
@@ -147,18 +147,106 @@ public static class Program
 
 
         command[0x04] = 0x30; // ???
-        command[0x09] = 0x08; // ???
-        command[0x0a] = 0x08; // ???
-        command[0x0b] = 0x01; // ???
-        command[0x0e] = 0x18; // ???
-        command[0x0f] = 0xff; // ???
+        /*
+         * 0x04 values:
+         * 0x30; normal lighting
+         * 0x31; same
+         * 0x32; same
+         * 0x33; same
+         *
+         * 0x29; backlight and led logo off
+         * 0x28 - 0x24; same
+         *
+         */
 
-        command[0x11] = 0x0d; // ???
-        command[0x1c] = 0xff; // ???
+        command[0x09] = 0x08; // underglow effect; mine: 0x08
+        /*
+         * 0x09 values:
+         * 0x00: off
+         * 0x01: horizontal dimming wave
+         * 0x02: horizontal pulse wave
+         * 0x03: waterfall
+         * 0x04: full on, cycling colors
+         * 0x05: breathing
+         * 0x06: full on, one color
+         * 0x07: glow pressed key
+         * 0x08: glow spreading from pressed key
+         * 0x09: glow row of pressed key
+         * 0x0a: random pattern, one color
+         * 0x0b: full on, rainbow color cycle
+         * 0x0c: full on, rainbow waterfall
+         * 0x0d: continuous wave originating from center, one color
+         * 0x0e: circling j/k keys, then spreading outward, one color
+         * 0x0f: raining, one color
+         * 0x10: wave left/right back and forth, one color
+         * 0x11: full on, slow color saturation cycle
+         * 0x12: full on, slow outward rainbow origination from center
+         * 0x13+ not tested
+         */
 
-        command[0x25] = 0x09; // ???
-        command[0x26] = 0x02; // ???
-        command[0x28] = 0x01; // ???
+        command[0x0a] = 0x08; // underglow brightness; mine: 0x08 (0x00=off 0x01=dim .. 0x09=bright; 0x0a+ weird behavior)
+        command[0x0b] = 0x01; // underglow speed; mine: 0x01; 0x00=fast, higher=slower (max 0xff, but 0x10 is already quite slow)
+
+        command[0x0e] = 0x18; // ??? mine: 0x18 ??? 0x00 color is green, towards value 0xff it goes yellow
+        command[0x0f] = 0xff; // ??? mine: 0xff
+        /*
+         * 0x0f values:
+         * 0x00: dim red
+         * 0x10: orange-yellow
+         * 0x20: yellow-green
+         * 0x40: green
+         * 0x80: greener
+         * up higher still more pure green?
+         */
+
+        command[0x11] = 0x0d; // ??? mine: 0x0d
+        command[0x1c] = 0xff; // ??? mine: 0xff
+
+        command[0x24] = 0x00; // mine: 0x00; "logo led" effect??
+        /*
+         * 0x24 values:
+         * 0x00: color pulse
+         * 0x01: rainbow
+         * 0x02: color pulse
+         * 0x03: solid color
+         * 0x04: solid color
+         * 0x05: solid color
+         * 0x06-0x08: off
+         * 0x09+: not tested
+         */
+
+        command[0x25] = 0x09; // ??? mine: 0x09; "logo led" brightness 0x00=off .. 0x09=bright
+        command[0x26] = 0x02; // ??? mine: 0x02
+        command[0x27] = 0x00; // mine: 0x00; "logo led" effect as well??
+        /*
+         * 0x27 values:
+         * 0x00: color pulse
+         * 0x01 - 0x0a: various rainbow/color cycle effects
+         *
+         */
+
+        command[0x28] = 0x01; // mine: 0x01; "logo led" color
+        /*
+         * 0x28 values:
+         * 0x00: red
+         * 0x01: orange
+         * 0x02: yellow
+         * 0x03: green
+         * 0x04: teal
+         * 0x05: blue
+         * 0x06: purple
+         * 0x07: white
+         * 0x08: off
+         * 0x09+ are repeating colors in some order?
+         * 0x09: blue
+         * 0x0a: red
+         * 0x0b: white
+         * 0x0c: teal
+         * 0x0d: white
+         * 0x0e: blue
+         * 0x0f: white
+         * 0x10+: not tested
+         */
 
         command[0x29] = shownImage;// show image 0(time)/1/2
         command[0x2a] = image0NumOfFrames;// frame count  in image 1
